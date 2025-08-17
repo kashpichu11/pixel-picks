@@ -3,109 +3,80 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Game Deals</title>
+  <title>Live Steam & Epic Game Deals</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #121212;
-      color: #fff;
+      font-family: 'Inter', sans-serif;
+      background: #0f1115;
+      color: #f5f5f5;
       margin: 0;
       padding: 20px;
     }
     h1 {
       text-align: center;
-      margin-bottom: 10px;
-    }
-    .filter {
-      text-align: center;
       margin-bottom: 20px;
+      font-weight: 600;
     }
     .deal {
-      background: #1e1e1e;
+      background: #1a1d24;
       margin: 10px auto;
       padding: 15px;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-      max-width: 500px;
+      max-width: 600px;
     }
     .deal a {
       color: #4cafef;
       text-decoration: none;
+      font-weight: 600;
     }
     .deal a:hover {
       text-decoration: underline;
     }
+    .price {
+      margin-top: 5px;
+      font-size: 0.95em;
+    }
+    .store {
+      font-size: 0.85em;
+      color: #aaa;
+    }
   </style>
 </head>
 <body>
-  <h1>Latest Game Deals</h1>
-
-  <!-- Price range filter -->
-  <div class="filter">
-    <label for="priceRange">Max Price: $<span id="priceValue">100</span></label><br>
-    <input type="range" id="priceRange" min="0" max="100" value="100" step="1">
-  </div>
-
+  <h1>🔥 Live Steam & Epic Deals</h1>
   <div id="deals">Loading deals...</div>
 
   <script>
-    const dealsAPI = 'https://kashpichu11.github.io/pixel-picks/deals.json';
-    let allDeals = [];
+    const dealsAPI = 'https://www.cheapshark.com/api/1.0/deals?storeID=1,25&sortBy=Deal%20Rating&pageSize=20';
 
-    function fetchDeals() {
-      fetch(dealsAPI)
-        .then(res => {
-          if (!res.ok) throw new Error('Network error');
-          return res.json();
-        })
-        .then(data => {
-          allDeals = data;
-          renderDeals();
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById('deals').textContent = 'Failed to load deals.';
+    fetch(dealsAPI)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('deals');
+        container.innerHTML = '';
+
+        data.forEach(deal => {
+          const div = document.createElement('div');
+          div.className = 'deal';
+          div.innerHTML = `
+            <a href="https://www.cheapshark.com/redirect?dealID=${deal.dealID}" target="_blank">
+              ${deal.title}
+            </a>
+            <div class="price">
+              <strong>${deal.salePrice}</strong> <span style="text-decoration: line-through; color:#888;">${deal.normalPrice}</span> 
+              (${deal.savings.split('.')[0]}% off)
+            </div>
+            <div class="store">Store: ${deal.storeID === '1' ? 'Steam' : 'Epic Games Store'}</div>
+          `;
+          container.appendChild(div);
         });
-    }
-
-    function renderDeals() {
-      const maxPrice = parseFloat(document.getElementById('priceRange').value);
-      const container = document.getElementById('deals');
-      container.innerHTML = '';
-
-      const filtered = allDeals.filter(deal => {
-        const priceNum = parseFloat(deal.price.replace(/[^0-9.]/g, ''));
-        return !isNaN(priceNum) && priceNum <= maxPrice;
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('deals').textContent = 'Failed to load deals.';
       });
-
-      if (filtered.length === 0) {
-        container.textContent = 'No deals in this price range.';
-        return;
-      }
-
-      filtered.forEach(deal => {
-        const div = document.createElement('div');
-        div.className = 'deal';
-        div.innerHTML = `
-          <strong>${deal.title}</strong><br>
-          Price: ${deal.price}<br>
-          <a href="${deal.link}" target="_blank">View Deal</a>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    // Event listener for slider
-    document.getElementById('priceRange').addEventListener('input', () => {
-      document.getElementById('priceValue').textContent = document.getElementById('priceRange').value;
-      renderDeals();
-    });
-
-    // Initial fetch
-    fetchDeals();
-
-    // Refresh every 10 minutes (600000 ms)
-    setInterval(fetchDeals, 600000);
   </script>
 </body>
 </html>
