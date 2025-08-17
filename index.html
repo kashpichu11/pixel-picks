@@ -1,79 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Game Deals Hub</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #121212;
-      color: #f0f0f0;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      padding: 2rem;
-      text-align: center;
-    }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-    .deal {
-      background: #1e1e1e;
-      padding: 1rem;
-      margin: 1rem 0;
-      border-radius: 8px;
-    }
-    a {
-      color: #00bfa5;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 Game Deals Hub</title>
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at top, #1a1a1a, #000);
+    color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+  }
+  header {
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+  header h1 {
+    font-size: 2.5rem;
+    margin: 0;
+    color: #00ffc8;
+  }
+  header p {
+    color: #ccc;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+  }
+  .container {
+    max-width: 900px;
+    margin: auto;
+    padding: 1rem;
+  }
+  .deal {
+    background: rgba(30, 30, 30, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    transform: translateY(20px);
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+  }
+  @keyframes fadeUp {
+    to { transform: translateY(0); opacity: 1; }
+  }
+  h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.5rem;
+    color: #00ffc8;
+  }
+  p {
+    margin: 0.25rem 0 0.5rem;
+  }
+  a {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: #00ffc8;
+    color: #000;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background 0.3s;
+  }
+  a:hover {
+    background: #00d9a8;
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>🔥 Latest Game Deals</h1>
-    <div id="deals-list">Loading deals...</div>
-  </div>
 
-  <script>
-    // Sample data — you can replace this with your real deals later
-    const deals = [
-      {
-        title: "Cyberpunk 2077",
-        price: 29.99,
-        original: 59.99,
-        discount: 50,
-        url: "https://store.steampowered.com/app/1091500"
-      },
-      {
-        title: "Hades",
-        price: 12.49,
-        original: 24.99,
-        discount: 50,
-        url: "https://store.steampowered.com/app/1145360"
-      }
-    ];
+<header>
+  <h1>🔥 Game Deals Hub</h1>
+  <p>Smart savings for gamers — fresh picks every time you visit</p>
+</header>
 
-    const container = document.getElementById('deals-list');
-    container.innerHTML = '';
-    deals.forEach(deal => {
-      const el = document.createElement('div');
-      el.className = 'deal';
-      el.innerHTML = `
-        <h2>${deal.title}</h2>
-        <p><strong>$${deal.price}</strong> <del>$${deal.original}</del> (${deal.discount}% off)</p>
-        <a href="${deal.url}" target="_blank">View on Store</a>
-      `;
-      container.appendChild(el);
-    });
-  </script>
+<div class="container" id="deals-list">
+  Loading deals...
+</div>
+
+<script>
+  // 💾 Sample Data — Replace or expand as you like
+  const deals = [
+    {
+      title: "Cyberpunk 2077",
+      price: 29.99,
+      original: 59.99,
+      discount: 50,
+      url: "https://store.steampowered.com/app/1091500"
+    },
+    {
+      title: "Hades",
+      price: 12.49,
+      original: 24.99,
+      discount: 50,
+      url: "https://store.steampowered.com/app/1145360"
+    },
+    {
+      title: "Red Dead Redemption 2",
+      price: 19.79,
+      original: 59.99,
+      discount: 67,
+      url: "https://store.steampowered.com/app/1174180"
+    }
+  ];
+
+  const container = document.getElementById('deals-list');
+  container.innerHTML = '';
+  
+  deals.forEach((deal, i) => {
+    const el = document.createElement('div');
+    el.className = 'deal';
+    el.style.animationDelay = `${i * 0.1}s`;
+    el.innerHTML = `
+      <h2>${deal.title}</h2>
+      <p><strong>$${deal.price.toFixed(2)}</strong> <del>$${deal.original.toFixed(2)}</del> (${deal.discount}% off)</p>
+      <a href="${deal.url}" target="_blank">View on Store</a>
+    `;
+    container.appendChild(el);
+  });
+</script>
+
 </body>
+  
 </html>
