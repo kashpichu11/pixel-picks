@@ -42,6 +42,11 @@
       font-size: 0.85em;
       color: #aaa;
     }
+    .error {
+      text-align: center;
+      color: #ff6b6b;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -49,16 +54,22 @@
   <div id="deals">Loading deals...</div>
 
   <script>
-    const proxyAPI = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(
-      'https://www.cheapshark.com/api/1.0/deals?storeID=1,25&sortBy=Deal%20Rating&pageSize=20'
-    );
+    const dealsAPI = 'https://www.cheapshark.com/api/1.0/deals?storeID=1,25&sortBy=Deal%20Rating&pageSize=20';
 
     function loadDeals() {
-      fetch(proxyAPI)
-        .then(res => res.json())
+      fetch(dealsAPI)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+          return res.json();
+        })
         .then(data => {
           const container = document.getElementById('deals');
           container.innerHTML = '';
+
+          if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML = '<div class="error">No deals found right now.</div>';
+            return;
+          }
 
           data.forEach(deal => {
             const div = document.createElement('div');
@@ -68,7 +79,8 @@
                 ${deal.title}
               </a>
               <div class="price">
-                <strong>$${deal.salePrice}</strong> <span style="text-decoration: line-through; color:#888;">$${deal.normalPrice}</span> 
+                <strong>$${deal.salePrice}</strong> 
+                <span style="text-decoration: line-through; color:#888;">$${deal.normalPrice}</span> 
                 (${Math.round(deal.savings)}% off)
               </div>
               <div class="store">Store: ${deal.storeID === '1' ? 'Steam' : 'Epic Games Store'}</div>
@@ -78,7 +90,7 @@
         })
         .catch(err => {
           console.error(err);
-          document.getElementById('deals').textContent = 'Failed to load deals.';
+          document.getElementById('deals').innerHTML = `<div class="error">Failed to load deals: ${err.message}</div>`;
         });
     }
 
