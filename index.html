@@ -34,6 +34,11 @@
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.4);
       max-width: 600px;
+      animation: fadeIn 0.4s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .deal a {
       color: #00bfff;
@@ -69,6 +74,28 @@
       background: #555;
       cursor: not-allowed;
     }
+    #pageIndicator {
+      font-weight: 600;
+      color: #ccc;
+      margin: 0 10px;
+    }
+    #spinner {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .loader {
+      border: 6px solid #2a2a2a;
+      border-top: 6px solid #00bfff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -79,10 +106,12 @@
     <input type="range" id="priceRange" min="0" max="100" value="100" step="1">
   </div>
 
+  <div id="spinner"><div class="loader"></div></div>
   <div id="deals">Loading deals...</div>
 
   <div class="pagination">
     <button id="prevBtn">Previous</button>
+    <span id="pageIndicator">Page 1</span>
     <button id="nextBtn">Next</button>
   </div>
 
@@ -91,21 +120,31 @@
     let currentPage = 0;
     let allDeals = [];
 
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pageIndicator = document.getElementById('pageIndicator');
+    const spinner = document.getElementById('spinner');
+
     function fetchDeals(page = 0) {
+      spinner.style.display = 'block';
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
+      pageIndicator.textContent = `Loading...`;
+
       const url = `${dealsAPIBase}&pageNumber=${page}`;
       fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-          return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
           allDeals = data;
           renderDeals();
           updatePaginationButtons();
+          spinner.style.display = 'none';
         })
         .catch(err => {
           console.error(err);
           document.getElementById('deals').innerHTML = `<div style="text-align:center;color:#ff6b6b;">Failed to load deals: ${err.message}</div>`;
+          pageIndicator.textContent = `Error`;
+          spinner.style.display = 'none';
         });
     }
 
@@ -140,7 +179,9 @@
     }
 
     function updatePaginationButtons() {
-      document.getElementById('prevBtn').disabled = currentPage === 0;
+      prevBtn.disabled = currentPage === 0;
+      nextBtn.disabled = false;
+      pageIndicator.textContent = `Page ${currentPage + 1}`;
     }
 
     document.getElementById('priceRange').addEventListener('input', () => {
@@ -148,12 +189,12 @@
       renderDeals();
     });
 
-    document.getElementById('nextBtn').addEventListener('click', () => {
+    nextBtn.addEventListener('click', () => {
       currentPage++;
       fetchDeals(currentPage);
     });
 
-    document.getElementById('prevBtn').addEventListener('click', () => {
+    prevBtn.addEventListener('click', () => {
       if (currentPage > 0) {
         currentPage--;
         fetchDeals(currentPage);
