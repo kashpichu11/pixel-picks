@@ -63,6 +63,11 @@
       font-size: 0.85em;
       color: #aaa;
     }
+    .tags {
+      font-size: 0.85em;
+      color: #888;
+      margin-top: 5px;
+    }
     .pagination {
       text-align: center;
       margin-top: 20px;
@@ -179,7 +184,9 @@
         try {
           const res = await fetch(`https://www.cheapshark.com/api/1.0/games?id=${deal.gameID}`);
           const data = await res.json();
-          genreCache.set(deal.gameID, data.info?.genres || []);
+          const rawTags = data.info?.tags || [];
+          const normalizedTags = rawTags.map(tag => tag.toLowerCase());
+          genreCache.set(deal.gameID, normalizedTags);
         } catch (err) {
           console.warn(`Genre fetch failed for ${deal.title}`, err);
           genreCache.set(deal.gameID, []);
@@ -190,14 +197,14 @@
 
     function renderDeals() {
       const maxPrice = parseFloat(document.getElementById('priceRange').value);
-      const selectedGenre = document.getElementById('genreSelect').value;
+      const selectedGenre = document.getElementById('genreSelect').value.toLowerCase();
       const container = document.getElementById('deals');
       container.innerHTML = '';
 
       const filtered = allDeals.filter(deal => {
         const priceOK = parseFloat(deal.salePrice) <= maxPrice;
-        const genres = genreCache.get(deal.gameID) || [];
-        const genreOK = selectedGenre === 'All' || genres.includes(selectedGenre);
+        const tags = genreCache.get(deal.gameID) || [];
+        const genreOK = selectedGenre === 'all' || tags.some(tag => tag.includes(selectedGenre));
         return priceOK && genreOK;
       });
 
@@ -207,6 +214,7 @@
       }
 
       filtered.forEach(deal => {
+        const tags = genreCache.get(deal.gameID) || [];
         const div = document.createElement('div');
         div.className = 'deal';
         div.innerHTML = `
@@ -218,16 +226,4 @@
             <span style="text-decoration: line-through; color:#888;">$${deal.normalPrice}</span> 
             (${Math.round(deal.savings)}% off)
           </div>
-          <div class="store">Store: ${deal.storeID === '1' ? 'Steam' : 'Epic Games Store'}</div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function updatePaginationButtons() {
-      prevBtn.disabled = currentPage === 0;
-      nextBtn.disabled = false;
-      pageIndicator.textContent = `Page ${currentPage + 1}`;
-    }
-
-    document.get
+          <div class="store">Store: ${deal.storeID === '1
