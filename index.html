@@ -142,6 +142,7 @@
     const dealsAPIBase = 'https://www.cheapshark.com/api/1.0/deals?storeID=1,25&sortBy=Deal%20Rating&pageSize=20';
     let currentPage = 0;
     let allDeals = [];
+    const genreCache = new Map();
 
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
@@ -157,8 +158,9 @@
       const url = `${dealsAPIBase}&pageNumber=${page}`;
       fetch(url)
         .then(res => res.json())
-        .then(data => {
+        .then(async data => {
           allDeals = data;
+          await fetchGenresForDeals(data);
           renderDeals();
           updatePaginationButtons();
           spinner.style.display = 'none';
@@ -171,6 +173,21 @@
         });
     }
 
+    async function fetchGenresForDeals(deals) {
+      const promises = deals.map(async deal => {
+        if (genreCache.has(deal.gameID)) return;
+        try {
+          const res = await fetch(`https://www.cheapshark.com/api/1.0/games?id=${deal.gameID}`);
+          const data = await res.json();
+          genreCache.set(deal.gameID, data.info?.genres || []);
+        } catch (err) {
+          console.warn(`Genre fetch failed for ${deal.title}`, err);
+          genreCache.set(deal.gameID, []);
+        }
+      });
+      await Promise.all(promises);
+    }
+
     function renderDeals() {
       const maxPrice = parseFloat(document.getElementById('priceRange').value);
       const selectedGenre = document.getElementById('genreSelect').value;
@@ -179,7 +196,8 @@
 
       const filtered = allDeals.filter(deal => {
         const priceOK = parseFloat(deal.salePrice) <= maxPrice;
-        const genreOK = selectedGenre === 'All' || (deal.tags && deal.tags.includes(selectedGenre));
+        const genres = genreCache.get(deal.gameID) || [];
+        const genreOK = selectedGenre === 'All' || genres.includes(selectedGenre);
         return priceOK && genreOK;
       });
 
@@ -212,27 +230,4 @@
       pageIndicator.textContent = `Page ${currentPage + 1}`;
     }
 
-    document.getElementById('priceRange').addEventListener('input', () => {
-      document.getElementById('priceValue').textContent = document.getElementById('priceRange').value;
-      renderDeals();
-    });
-
-    document.getElementById('genreSelect').addEventListener('change', renderDeals);
-
-    nextBtn.addEventListener('click', () => {
-      currentPage++;
-      fetchDeals(currentPage);
-    });
-
-    prevBtn.addEventListener('click', () => {
-      if (currentPage > 0) {
-        currentPage--;
-        fetchDeals(currentPage);
-      }
-    });
-
-    fetchDeals(currentPage);
-    setInterval(() => fetchDeals(currentPage), 600000); // refresh every 10 minutes
-  </script>
-</body>
-</html>
+    document.get
