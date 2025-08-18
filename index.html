@@ -27,13 +27,6 @@
       font-size: 0.95em;
       color: #ccc;
     }
-    .filter select, .filter input[type="range"] {
-      margin-top: 5px;
-      padding: 6px;
-      border-radius: 5px;
-      border: none;
-      font-size: 0.95em;
-    }
     .deal {
       background: #2a2a2a;
       margin: 10px auto;
@@ -110,23 +103,7 @@
 
   <div class="filter">
     <label for="priceRange">Max Price: $<span id="priceValue">100</span></label><br>
-    <input type="range" id="priceRange" min="0" max="100" value="100" step="1"><br><br>
-
-    <label for="genreSelect">Genre:</label><br>
-    <select id="genreSelect">
-      <option value="All">All Genres</option>
-      <option value="Action">Action</option>
-      <option value="Adventure">Adventure</option>
-      <option value="RPG">RPG</option>
-      <option value="Strategy">Strategy</option>
-      <option value="Shooter">Shooter</option>
-      <option value="Puzzle">Puzzle</option>
-      <option value="Racing">Racing</option>
-      <option value="Simulation">Simulation</option>
-      <option value="Indie">Indie</option>
-      <option value="Sports">Sports</option>
-      <option value="Horror">Horror</option>
-    </select>
+    <input type="range" id="priceRange" min="0" max="100" value="100" step="1">
   </div>
 
   <div id="spinner"><div class="loader"></div></div>
@@ -142,7 +119,6 @@
     const dealsAPIBase = 'https://www.cheapshark.com/api/1.0/deals?storeID=1,25&sortBy=Deal%20Rating&pageSize=20';
     let currentPage = 0;
     let allDeals = [];
-    const genreCache = new Map();
 
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
@@ -158,9 +134,8 @@
       const url = `${dealsAPIBase}&pageNumber=${page}`;
       fetch(url)
         .then(res => res.json())
-        .then(async data => {
+        .then(data => {
           allDeals = data;
-          await fetchGenresForDeals(data);
           renderDeals();
           updatePaginationButtons();
           spinner.style.display = 'none';
@@ -173,36 +148,15 @@
         });
     }
 
-    async function fetchGenresForDeals(deals) {
-      const promises = deals.map(async deal => {
-        if (genreCache.has(deal.gameID)) return;
-        try {
-          const res = await fetch(`https://www.cheapshark.com/api/1.0/games?id=${deal.gameID}`);
-          const data = await res.json();
-          genreCache.set(deal.gameID, data.info?.genres || []);
-        } catch (err) {
-          console.warn(`Genre fetch failed for ${deal.title}`, err);
-          genreCache.set(deal.gameID, []);
-        }
-      });
-      await Promise.all(promises);
-    }
-
     function renderDeals() {
       const maxPrice = parseFloat(document.getElementById('priceRange').value);
-      const selectedGenre = document.getElementById('genreSelect').value;
       const container = document.getElementById('deals');
       container.innerHTML = '';
 
-      const filtered = allDeals.filter(deal => {
-        const priceOK = parseFloat(deal.salePrice) <= maxPrice;
-        const genres = genreCache.get(deal.gameID) || [];
-        const genreOK = selectedGenre === 'All' || genres.includes(selectedGenre);
-        return priceOK && genreOK;
-      });
+      const filtered = allDeals.filter(deal => parseFloat(deal.salePrice) <= maxPrice);
 
       if (filtered.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:#ccc;">No deals match your filters.</div>';
+        container.innerHTML = '<div style="text-align:center;color:#ccc;">No deals in this price range.</div>';
         return;
       }
 
@@ -230,4 +184,25 @@
       pageIndicator.textContent = `Page ${currentPage + 1}`;
     }
 
-    document.get
+    document.getElementById('priceRange').addEventListener('input', () => {
+      document.getElementById('priceValue').textContent = document.getElementById('priceRange').value;
+      renderDeals();
+    });
+
+    nextBtn.addEventListener('click', () => {
+      currentPage++;
+      fetchDeals(currentPage);
+    });
+
+    prevBtn.addEventListener('click', () => {
+      if (currentPage > 0) {
+        currentPage--;
+        fetchDeals(currentPage);
+      }
+    });
+
+    fetchDeals(currentPage);
+    setInterval(() => fetchDeals(currentPage), 600000); // refresh every 10 minutes
+  </script>
+</body>
+</html>
